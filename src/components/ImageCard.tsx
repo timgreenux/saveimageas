@@ -76,15 +76,25 @@ export default function ImageCard({ image, onDelete }: Props) {
       e.stopPropagation()
       try {
         const res = await fetch(image.url, { mode: 'cors' })
+        if (!res.ok) throw new Error('Fetch failed')
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
         a.download = image.name || 'image'
+        document.body.appendChild(a)
         a.click()
-        URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 100)
       } catch {
-        window.open(image.url, '_blank', 'noopener')
+        const a = document.createElement('a')
+        a.href = image.url
+        a.download = image.name || 'image'
+        a.target = '_blank'
+        a.rel = 'noopener'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
       }
     },
     [image.url, image.name]
