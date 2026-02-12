@@ -38,7 +38,7 @@
 .nav .navItemActive {
   position: absolute;
   left: 50%;
-  top: 25%;
+  top: 64px; /* 64px below the Preply icon (header) */
   transform: translate(-50%, -50%);
 }
 

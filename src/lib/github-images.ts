@@ -63,11 +63,14 @@ export async function fetchImagesFromGitHub(): Promise<ImageItem[]> {
     }
   })
 
-  // Sort: most recent first (by uploadedAt date, then by name which contains timestamp)
+  // Sort by uploaded date only: most recent first. Items without uploadedAt go to the end.
   items.sort((a, b) => {
-    const aDate = a.uploadedAt || a.name
-    const bDate = b.uploadedAt || b.name
-    return bDate.localeCompare(aDate)
+    const aHas = a.uploadedAt != null && a.uploadedAt !== ''
+    const bHas = b.uploadedAt != null && b.uploadedAt !== ''
+    if (aHas && bHas) return new Date(b.uploadedAt!).getTime() - new Date(a.uploadedAt!).getTime()
+    if (aHas) return -1
+    if (bHas) return 1
+    return 0
   })
 
   return items

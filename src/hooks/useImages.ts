@@ -2,6 +2,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchImagesFromGitHub, isGitHubConfigured } from '../lib/github-images'
 import type { ImageItem } from '../types/api'
 
+function sortByUploadedDate(a: ImageItem, b: ImageItem): number {
+  const aHas = a.uploadedAt != null && a.uploadedAt !== ''
+  const bHas = b.uploadedAt != null && b.uploadedAt !== ''
+  if (aHas && bHas) return new Date(b.uploadedAt!).getTime() - new Date(a.uploadedAt!).getTime()
+  if (aHas) return -1
+  if (bHas) return 1
+  return 0
+}
+
 export function useImages() {
   const [images, setImages] = useState<ImageItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -22,7 +31,7 @@ export function useImages() {
       if (fallback.ok) {
         const data = await fallback.json()
         const list = Array.isArray(data.images) ? data.images : []
-        list.sort((a: ImageItem, b: ImageItem) => (b.uploadedAt || b.name).localeCompare(a.uploadedAt || a.name))
+        list.sort(sortByUploadedDate)
         setImages(list)
       } else {
         setImages([])
@@ -33,7 +42,7 @@ export function useImages() {
         if (fallback.ok) {
           const data = await fallback.json()
           const list = Array.isArray(data.images) ? data.images : []
-          list.sort((a: ImageItem, b: ImageItem) => (b.uploadedAt || b.name).localeCompare(a.uploadedAt || a.name))
+          list.sort(sortByUploadedDate)
           setImages(list)
           return
         }
