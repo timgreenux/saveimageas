@@ -35,17 +35,73 @@ function Placeholders() {
   )
 }
 
-function fileToBase64(file: File): Promise<string> {
+function fileToBase64Raw(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      // Strip the data:image/...;base64, prefix to get raw base64
+      const base64 = dataUrl.replace(/^data:[^;]+;base64,/, '')
+      resolve(base64)
+    }
     reader.onerror = () => reject(new Error('Failed to read file'))
     reader.readAsDataURL(file)
   })
 }
 
+// GitHub config from env vars (baked into the bundle at build time)
+const GH_TOKEN = import.meta.env.VITE_GITHUB_TOKEN || ''
+const GH_REPO = import.meta.env.VITE_GITHUB_REPO || ''
+const GH_BRANCH = import.meta.env.VITE_GITHUB_BRANCH || 'main'
+const GH_PATH = import.meta.env.VITE_GITHUB_IMAGES_PATH || 'images'
+
+async function uploadToGitHub(
+  file: File,
+  uploaderName: string
+): Promise<{ id: string; name: string; url: string; uploadedBy: string; uploadedAt: string } | null> {
+  if (!GH_TOKEN || !GH_REPO) {
+    throw new Error('GitHub upload not configured. Set VITE_GITHUB_TOKEN and VITE_GITHUB_REPO in Vercel env vars.')
+  }
+
+  const base64Content = await fileToBase64Raw(file)
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const base = safeName.replace(/\.[^.]+$/, '')
+  const ext = (safeName.match(/\.[^.]+$/) || ['.bin'])[0]
+  const uniqueName = `${base}-${Date.now()}${ext}`
+  const filePath = `${GH_PATH}/${uniqueName}`
+
+  const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${filePath}`, {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      Authorization: `Bearer ${GH_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: `Add image: ${uniqueName}`,
+      content: base64Content,
+      branch: GH_BRANCH,
+    }),
+  })
+
+  if (!res.ok) {
+    const errText = await res.text()
+    throw new Error(`GitHub API error ${res.status}: ${errText}`)
+  }
+
+  const now = new Date().toISOString().split('T')[0]
+  return {
+    id: uniqueName,
+    name: uniqueName,
+    url: `https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${filePath}`,
+    uploadedBy: uploaderName,
+    uploadedAt: now,
+  }
+}
+
 export default function MasonryGrid() {
-  const { idToken } = useAuth()
+  const { user } = useAuth()
   const { images, loading, prependImage } = useImages()
   const [uploading, setUploading] = useState(false)
 
@@ -53,48 +109,23 @@ export default function MasonryGrid() {
     const handler = async (e: Event) => {
       const ev = e as CustomEvent<{ file: File }>
       const file = ev.detail?.file
-      if (!file || !file.type.startsWith('image/') || !idToken) return
+      if (!file || !file.type.startsWith('image/')) return
 
       setUploading(true)
       try {
-        const dataUrl = await fileToBase64(file)
-
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify({
-            data: dataUrl,
-            filename: file.name,
-            mimeType: file.type,
-          }),
-        })
-
-        if (!res.ok) {
-          let errMsg = `HTTP ${res.status} ${res.statusText}`
-          try {
-            const errBody = await res.json()
-            errMsg = errBody.error || JSON.stringify(errBody)
-          } catch { /* couldn't parse */ }
-          console.error('Upload failed:', errMsg)
-          alert(`Upload failed: ${errMsg}`)
-          return
-        }
-
-        const data = await res.json()
-        if (data.image) prependImage(data.image)
+        const uploaderName = user?.name || user?.email || 'Anonymous'
+        const image = await uploadToGitHub(file, uploaderName)
+        if (image) prependImage(image)
       } catch (err) {
         console.error('Upload error:', err)
-        alert('Upload failed. Check the console for details.')
+        alert(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
       } finally {
         setUploading(false)
       }
     }
     window.addEventListener('saveimageas-upload', handler)
     return () => window.removeEventListener('saveimageas-upload', handler)
-  }, [idToken, prependImage])
+  }, [user, prependImage])
 
   // Dispatch uploading state so the sidebar can show a spinner
   useEffect(() => {
