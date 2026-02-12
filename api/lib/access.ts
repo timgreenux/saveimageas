@@ -7,7 +7,16 @@
  * 2. ALLOWED_DOMAIN (e.g. preply.com) – any user with email ending in @preply.com
  * 3. Admin API group (all-preply-design@preply.com) – only if GOOGLE_SERVICE_ACCOUNT_KEY + GOOGLE_ADMIN_EMAIL are set
  */
-import { isMemberOfGroup } from './group'
+// Dynamic import to avoid loading googleapis at module init time
+// (googleapis is ~80MB and causes cold-start timeouts on Vercel)
+let _isMemberOfGroup: ((email: string) => Promise<boolean>) | null = null
+async function isMemberOfGroupLazy(email: string): Promise<boolean> {
+  if (!_isMemberOfGroup) {
+    const mod = await import('./group')
+    _isMemberOfGroup = mod.isMemberOfGroup
+  }
+  return _isMemberOfGroup(email)
+}
 
 const ALLOWED_EMAILS_RAW = process.env.ALLOWED_EMAILS || ''
 const ALLOWED_DOMAIN = (process.env.ALLOWED_DOMAIN || '').toLowerCase().replace(/^@/, '')
@@ -34,5 +43,5 @@ export async function isAllowed(email: string): Promise<boolean> {
     return normalized.endsWith('@' + ALLOWED_DOMAIN)
   }
 
-  return isMemberOfGroup(email)
+  return isMemberOfGroupLazy(email)
 }
