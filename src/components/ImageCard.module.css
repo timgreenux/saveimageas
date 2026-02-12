@@ -1,0 +1,91 @@
+.card {
+  break-inside: avoid;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.img {
+  width: 100%;
+  height: auto;
+  display: block;
+  vertical-align: middle;
+  transition: filter 0.25s ease;
+}
+
+.imgBlur {
+  filter: blur(4px);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--pink-overlay);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.overlayVisible {
+  opacity: 1;
+}
+
+.heartWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.card:hover .heartWrap,
+.heartWrapVisible {
+  opacity: 1;
+}
+
+.heartBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.heartIcon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.heartBtn:hover .heartIcon {
+  transform: scale(1.08);
+}
+
+.heartAnimating {
+  animation: heartPop 0.5s ease;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.heartCount {
+  font-family: var(--font-platform);
+  font-weight: 500;
+  font-size: 3rem;
+  color: var(--text);
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>save image as – preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #121117;
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+    }
+    .logoLink {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+    }
+    .logo { width: 48px; height: 48px; display: block; }
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      max-width: 480px;
+    }
+    .title {
+      font-weight: 600;
+      font-size: clamp(2.5rem, 10vw, 4.5rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: #121117;
+      margin: 0 0 48px;
+    }
+    .line { display: block; }
+    .googleBtn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 28px;
+      background: #FF7AAC;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 500;
+      border: 2px solid rgba(0,0,0,0.1);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .googleBtn:hover { filter: brightness(1.05); }
+    .googleIcon { width: 24px; height: 24px; flex-shrink: 0; }
+    .badge {
+      margin-top: 24px;
+      padding: 8px 12px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a href="#" class="logoLink" aria-label="Home">
+      <svg class="logo" width="48" height="48" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M69.4566 32.3146L45.5682 17.7121C37.8751 13.0105 28 18.5472 28 27.5643V68.6376C28 76.834 32.816 81.0666 39.0019 81.0666C44.8046 81.0666 49.5548 76.5737 49.9724 70.8798C55.6435 70.2849 60.3222 65.4947 60.0648 59.0056L70.4747 52.6424C74.1582 50.3917 76 46.591 76 42.7902C76 38.9895 74.7073 35.2288 69.4566 32.3146ZM39.0019 74.5232C36.5396 74.5232 34.5462 72.527 34.5462 70.0676C34.5462 67.6081 36.5396 65.609 39.0019 65.609C41.4643 65.609 43.4604 67.6052 43.4604 70.0676C43.4604 72.5299 41.4643 74.5232 39.0019 74.5232ZM53.5214 59.6605C53.5214 61.3421 52.4376 64.3965 48.428 64.3965C47.9733 63.6443 47.4328 62.9465 46.8179 62.3259C46.2002 61.7053 45.511 61.1562 44.7617 60.6929C43.0858 59.6605 41.1153 59.0657 39.0019 59.0657C37.5462 59.0657 36.1592 59.3488 34.8894 59.8607C34.7779 59.9065 34.652 59.958 34.5434 60.0066V50.1544C34.5434 47.5376 36.6625 45.4184 39.2793 45.4184H48.7855C51.4023 45.4184 53.5214 47.5376 53.5214 50.1544V59.6605ZM67.0629 47.06L60.0648 51.3383V50.1544C60.0648 43.9256 55.0143 38.8751 48.7855 38.8751H39.2793C37.5891 38.8751 35.9847 39.2469 34.5434 39.9161V27.5643C34.5434 23.6578 38.8217 21.2555 42.1563 23.2946L67.0629 38.5205C70.2545 40.4709 70.2545 45.1096 67.0629 47.06Z" fill="#121117"/>
+      </svg>
+    </a>
+    <div class="content">
+      <h1 class="title">
+        <span class="line">.save</span>
+        <span class="line">image</span>
+        <span class="line">as</span>
+      </h1>
+      <button type="button" class="googleBtn" onclick="alert('Run the app with: npm run dev  or  npx vercel dev')">
+        <svg class="googleIcon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Sign in with your Preply Google account
+      </button>
+      <p class="badge">Static preview · Run <code>npm run dev</code> or <code>npx vercel dev</code> for the full app</p>
+    </div>
+  </div>
+</body>
+</html>

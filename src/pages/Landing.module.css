@@ -1,0 +1,70 @@
+.wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+}
+
+.hero {
+  flex-shrink: 0;
+  padding: 120px 32px 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: #fff;
+  position: relative;
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+  transition: opacity 1.2s ease-out, filter 1.2s ease-out, transform 1.2s ease-out;
+}
+
+.hero[data-scrolled] {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(-24px);
+  pointer-events: none;
+  transition: opacity 1.2s ease-out, filter 1.2s ease-out, transform 1.2s ease-out;
+}
+
+.heroLogo {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  margin: 0;
+  display: block;
+}
+
+.feedSection {
+  flex: 1;
+  min-height: 400px;
+  padding: 50px 24px 48px;
+  background: #FAF9F7;
+  border-radius: 4px;
+  margin: 0 12px 12px;
+}
+
+.wrapper .feedSection {
+  animation: feedReveal 0.6s ease-out;
+}
+
+@keyframes feedReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

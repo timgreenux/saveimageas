@@ -1,0 +1,83 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  background: #fff;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  margin-left: 144px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  padding: 24px;
+  min-height: 112px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #FAF9F7;
+  border-radius: 4px;
+  margin: 12px 12px 0 12px;
+  transition: box-shadow 0.2s ease;
+}
+
+.welcome {
+  font-family: var(--font-platform);
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.2s ease, visibility 1.2s ease;
+}
+
+.welcomeVisible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.title {
+  position: absolute;
+  right: 24px;
+  font-family: var(--font-platform);
+  font-weight: 500;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--text);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.titleVisible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.contentWrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+  background: #fff;
+}
+
+.scrollContainer {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}

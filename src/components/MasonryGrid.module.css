@@ -1,0 +1,17 @@
+.masonry {
+  display: flex;
+  margin-left: -12px;
+  width: 100%;
+}
+
+.column {
+  padding-left: 12px;
+  background-clip: padding-box;
+}
+
+.placeholder {
+  background: var(--placeholder);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  break-inside: avoid;
+}
