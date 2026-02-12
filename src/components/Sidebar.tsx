@@ -20,19 +20,7 @@ export default function Sidebar() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { user, signOut } = useAuth()
   const [uploading, setUploading] = useState(false)
-  const [showSignOutToast, setShowSignOutToast] = useState(false)
-  const toastRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!showSignOutToast) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (toastRef.current && !toastRef.current.contains(e.target as Node)) {
-        setShowSignOutToast(false)
-      }
-    }
-    document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
-  }, [showSignOutToast])
+  const [showSignOutModal, setShowSignOutModal] = useState(false)
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -87,7 +75,7 @@ export default function Sidebar() {
         </button>
       </nav>
       {user && (
-        <div className={styles.userSection} ref={toastRef}>
+        <div className={styles.userSection}>
           {uploading && (
             <div className={styles.spinner} aria-label="Uploading">
               <svg viewBox="0 0 36 36" className={styles.spinnerSvg}>
@@ -100,17 +88,31 @@ export default function Sidebar() {
             type="button"
             className={styles.userAvatar}
             title={user.name}
-            onClick={() => setShowSignOutToast((v) => !v)}
-            aria-expanded={showSignOutToast}
-            aria-haspopup="true"
+            onClick={() => setShowSignOutModal(true)}
+            aria-haspopup="dialog"
           >
             {getInitials(user.name)}
           </button>
-          {showSignOutToast && (
-            <div className={styles.signOutToast}>
-              <button type="button" className={styles.signOutBtn} onClick={() => { signOut(); setShowSignOutToast(false); }}>
-                Sign out
-              </button>
+          {showSignOutModal && (
+            <div className={styles.modalBackdrop} onClick={() => setShowSignOutModal(false)}>
+              <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                <p className={styles.modalText}>Sign out?</p>
+                <div className={styles.modalActions}>
+                  <button type="button" className={styles.modalCancel} onClick={() => setShowSignOutModal(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.modalConfirm}
+                    onClick={() => {
+                      signOut()
+                      setShowSignOutModal(false)
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

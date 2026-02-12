@@ -58,7 +58,7 @@ const GH_PATH = import.meta.env.VITE_GITHUB_IMAGES_PATH || 'images'
 async function uploadToGitHub(
   file: File,
   uploaderName: string
-): Promise<{ id: string; name: string; url: string; uploadedBy: string; uploadedAt: string } | null> {
+): Promise<{ id: string; name: string; url: string; uploadedBy: string; uploadedAt: string; sha?: string } | null> {
   if (!GH_TOKEN || !GH_REPO) {
     throw new Error('GitHub upload not configured. Set VITE_GITHUB_TOKEN and VITE_GITHUB_REPO in Vercel env vars.')
   }
@@ -90,6 +90,9 @@ async function uploadToGitHub(
     throw new Error(`GitHub API error ${res.status}: ${errText}`)
   }
 
+  const resData = await res.json()
+  const sha = resData.content?.sha ?? resData.sha ?? undefined
+
   const now = new Date().toISOString().split('T')[0]
   try {
     await updateMetadataInGitHub(uniqueName, uploaderName, now)
@@ -103,6 +106,7 @@ async function uploadToGitHub(
     url: `https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${filePath}`,
     uploadedBy: uploaderName,
     uploadedAt: now,
+    sha,
   }
 }
 

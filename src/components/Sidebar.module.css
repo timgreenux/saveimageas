@@ -141,35 +141,63 @@
   filter: brightness(1.05);
 }
 
-.signOutToast {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 8px;
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  padding: 4px 0;
-  z-index: 200;
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
-.signOutBtn {
-  display: block;
-  width: 100%;
-  padding: 10px 20px;
+.modal {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 360px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.modalText {
+  font-family: var(--font-platform);
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 20px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modalCancel,
+.modalConfirm {
   font-family: var(--font-platform);
   font-size: 0.9rem;
-  color: var(--text);
-  background: none;
-  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
   cursor: pointer;
-  text-align: center;
-  white-space: nowrap;
+  border: none;
 }
 
-.signOutBtn:hover {
-  background: rgba(0, 0, 0, 0.06);
+.modalCancel {
+  background: #eee;
+  color: var(--text);
+}
+
+.modalCancel:hover {
+  background: #e0e0e0;
+}
+
+.modalConfirm {
+  background: var(--pink);
+  color: #fff;
+}
+
+.modalConfirm:hover {
+  filter: brightness(1.05);
 }
 
 @media (max-width: 768px) {
@@ -202,15 +230,5 @@
     margin: 0;
     margin-left: auto;
     position: relative;
-  }
-
-  .signOutToast {
-    bottom: auto;
-    top: 100%;
-    left: auto;
-    right: 0;
-    transform: none;
-    margin-bottom: 0;
-    margin-top: 8px;
   }
 }

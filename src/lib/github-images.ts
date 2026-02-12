@@ -33,13 +33,18 @@ export async function fetchImagesFromGitHub(): Promise<ImageItem[]> {
   // Don't include metadata.json as an image
   const imageOnly = imageFiles.filter((f) => f.name !== 'metadata.json')
 
+  // Fetch metadata via API (works for private repos; raw URL would 404)
   let metadata: MetadataMap = {}
   try {
     const metaRes = await fetch(
-      `https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${GH_PATH}/metadata.json`
+      `https://api.github.com/repos/${GH_REPO}/contents/${GH_PATH}/metadata.json?ref=${GH_BRANCH}`,
+      { headers: { Accept: 'application/vnd.github.v3+json', Authorization: `Bearer ${GH_TOKEN}` } }
     )
     if (metaRes.ok) {
-      metadata = await metaRes.json()
+      const data = await metaRes.json()
+      if (data.content) {
+        metadata = JSON.parse(atob(data.content.replace(/\n/g, '')))
+      }
     }
   } catch {
     // no metadata file yet
