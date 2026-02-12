@@ -36,6 +36,29 @@
   display: block;
 }
 
+.signInError {
+  font-family: var(--font-platform);
+  font-size: 0.9rem;
+  color: #c00;
+  margin: 0 0 16px;
+  line-height: 1.4;
+  max-width: 360px;
+}
+
+.signInHint {
+  font-family: var(--font-platform);
+  font-size: 0.95rem;
+  color: #555;
+  margin: 0 0 12px;
+}
+
+.googleButtonContainer {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .googleBtn {
   display: inline-flex;
   align-items: center;

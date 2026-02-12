@@ -12,7 +12,9 @@ type AuthContextValue = {
   loading: boolean
   isAllowed: boolean
   idToken: string | null
-  signIn: () => Promise<void>
+  signInError: string | null
+  isGoogleConfigured: boolean
+  renderGoogleButton: (container: HTMLElement) => Promise<void>
   signOut: () => void
   checkAllowed: () => Promise<boolean>
 }
@@ -28,8 +30,10 @@ declare global {
             client_id: string
             callback: (res: { credential: string }) => void
             auto_select?: boolean
+            ux_mode?: 'popup' | 'redirect'
           }) => void
-          prompt: () => void
+          prompt: (momentListener?: (notification: { isNotDisplayed: () => boolean; getNotDisplayedReason: () => string }) => void) => void
+          renderButton: (parent: HTMLElement, options: { type?: string; theme?: string; size?: string; text?: string; width?: number }) => void
         }
       }
     }
@@ -43,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isAllowed, setIsAllowed] = useState(false)
   const [idToken, setIdToken] = useState<string | null>(null)
+  const [signInError, setSignInError] = useState<string | null>(null)
 
   const checkAllowed = useCallback(async (): Promise<boolean> => {
     if (!idToken) return false
@@ -95,47 +100,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAllowed()
   }, [user, idToken, checkAllowed])
 
-  const signIn = useCallback(async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      console.error('VITE_GOOGLE_CLIENT_ID is not set')
-      return
+  const handleCredential = useCallback((res: { credential: string }) => {
+    try {
+      const payload = JSON.parse(atob(res.credential.split('.')[1]))
+      const u: User = {
+        id: payload.sub,
+        email: payload.email,
+        name: payload.name || payload.email,
+        picture: payload.picture,
+      }
+      setUser(u)
+      setIdToken(res.credential)
+      sessionStorage.setItem('saveimageas_user', JSON.stringify(u))
+      sessionStorage.setItem('saveimageas_id_token', res.credential)
+    } catch (e) {
+      setSignInError(e instanceof Error ? e.message : 'Invalid sign-in response.')
     }
-    if (!window.google?.accounts?.id?.initialize) {
-      const script = document.createElement('script')
-      script.src = 'https://accounts.google.com/gsi/client'
-      script.async = true
-      document.head.appendChild(script)
-      await new Promise<void>((resolve, reject) => {
-        script.onload = () => resolve()
-        script.onerror = () => reject(new Error('Google script failed'))
-      })
-    }
-
-    await new Promise<void>((resolve, reject) => {
-      window.google!.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (res) => {
-          try {
-            const payload = JSON.parse(atob(res.credential.split('.')[1]))
-            const u: User = {
-              id: payload.sub,
-              email: payload.email,
-              name: payload.name || payload.email,
-              picture: payload.picture,
-            }
-            setUser(u)
-            setIdToken(res.credential)
-            sessionStorage.setItem('saveimageas_user', JSON.stringify(u))
-            sessionStorage.setItem('saveimageas_id_token', res.credential)
-            resolve()
-          } catch (e) {
-            reject(e)
-          }
-        },
-      })
-      window.google!.accounts.id.prompt()
-    })
   }, [])
+
+  const renderGoogleButton = useCallback(
+    async (container: HTMLElement) => {
+      setSignInError(null)
+      if (!GOOGLE_CLIENT_ID) {
+        setSignInError('Sign-in is not configured. Add VITE_GOOGLE_CLIENT_ID in Vercel (Environment Variables), then redeploy.')
+        return
+      }
+      try {
+        if (!window.google?.accounts?.id?.initialize) {
+          const script = document.createElement('script')
+          script.src = 'https://accounts.google.com/gsi/client'
+          script.async = true
+          document.head.appendChild(script)
+          await new Promise<void>((resolve, reject) => {
+            script.onload = () => resolve()
+            script.onerror = () => reject(new Error('Google script failed to load.'))
+          })
+        }
+
+        window.google!.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          ux_mode: 'popup',
+          callback: handleCredential,
+        })
+
+        if (typeof window.google!.accounts.id.renderButton === 'function') {
+          container.innerHTML = ''
+          window.google!.accounts.id.renderButton(container, {
+            type: 'standard',
+            theme: 'filled_black',
+            size: 'large',
+            text: 'signin_with',
+            width: 280,
+          })
+        } else {
+          window.google!.accounts.id.prompt((notification) => {
+            if (notification?.isNotDisplayed?.()) {
+              const reason = (notification as { getNotDisplayedReason?: () => string }).getNotDisplayedReason?.() || ''
+              setSignInError(
+                `Sign-in prompt not shown (${reason || 'unknown'}). Add https://saveimageas.vercel.app to Authorized JavaScript origins in Google Cloud Console.`
+              )
+            }
+          })
+        }
+      } catch (e) {
+        setSignInError(e instanceof Error ? e.message : 'Sign-in failed. Check the console.')
+      }
+    },
+    [handleCredential]
+  )
 
   const signOut = useCallback(() => {
     setUser(null)
@@ -150,7 +182,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     isAllowed,
     idToken,
-    signIn,
+    signInError,
+    isGoogleConfigured: !!GOOGLE_CLIENT_ID,
+    renderGoogleButton,
     signOut,
     checkAllowed,
   }
