@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import styles from './Sidebar.module.css'
 
@@ -19,6 +19,16 @@ function getInitials(name: string): string {
 export default function Sidebar() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { user } = useAuth()
+  const [uploading, setUploading] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ev = e as CustomEvent<{ uploading: boolean }>
+      setUploading(ev.detail?.uploading ?? false)
+    }
+    window.addEventListener('saveimageas-uploading', handler)
+    return () => window.removeEventListener('saveimageas-uploading', handler)
+  }, [])
 
   const handleUploadClick = () => {
     fileInputRef.current?.click()
@@ -64,8 +74,18 @@ export default function Sidebar() {
         </button>
       </nav>
       {user && (
-        <div className={styles.userAvatar} title={user.name}>
-          {getInitials(user.name)}
+        <div className={styles.userSection}>
+          {uploading && (
+            <div className={styles.spinner} aria-label="Uploading">
+              <svg viewBox="0 0 36 36" className={styles.spinnerSvg}>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(209,61,118,0.2)" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15" fill="none" stroke="#D13D76" strokeWidth="3" strokeDasharray="25 75" strokeLinecap="round" />
+              </svg>
+            </div>
+          )}
+          <div className={styles.userAvatar} title={user.name}>
+            {getInitials(user.name)}
+          </div>
         </div>
       )}
     </aside>

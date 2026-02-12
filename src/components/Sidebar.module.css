@@ -93,9 +93,32 @@
   filter: none;
 }
 
-.userAvatar {
+.userSection {
   margin-top: auto;
   margin-bottom: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  animation: spinRotate 1s linear infinite;
+}
+
+.spinnerSvg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes spinRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.userAvatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
