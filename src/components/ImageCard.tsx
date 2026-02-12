@@ -16,10 +16,13 @@ function formatDate(dateStr: string): string {
 
 type Props = {
   image: ImageItem
+  onDelete?: (image: ImageItem) => void | Promise<void>
 }
 
-export default function ImageCard({ image }: Props) {
+export default function ImageCard({ image, onDelete }: Props) {
   const [hover, setHover] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [heartState, setHeartState] = useState<{ count: number; hasHearted: boolean }>({
     count: 0,
     hasHearted: false,
@@ -49,6 +52,23 @@ export default function ImageCard({ image }: Props) {
   )
 
   const showOverlay = hover
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setShowConfirm(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!onDelete || deleting) return
+    setDeleting(true)
+    try {
+      await onDelete(image)
+      setShowConfirm(false)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <div
@@ -86,13 +106,40 @@ export default function ImageCard({ image }: Props) {
             )}
           </button>
         </div>
-        {(image.uploadedBy || image.uploadedAt) && (
-          <div className={`${styles.uploaderInfo} ${showOverlay ? styles.uploaderInfoVisible : ''}`}>
-            {image.uploadedBy && <span className={styles.uploaderName}>{image.uploadedBy}.</span>}
-            {image.uploadedAt && <span className={styles.uploaderDate}>{formatDate(image.uploadedAt)}</span>}
-          </div>
-        )}
+        <div className={`${styles.uploaderInfo} ${showOverlay ? styles.uploaderInfoVisible : ''}`}>
+          {(image.uploadedBy || image.uploadedAt) && (
+            <>
+              {image.uploadedBy && <span className={styles.uploaderName}>{image.uploadedBy}.</span>}
+              {image.uploadedAt && <span className={styles.uploaderDate}>{formatDate(image.uploadedAt)}</span>}
+            </>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              className={styles.deleteLink}
+              onClick={handleDeleteClick}
+              aria-label="Delete image"
+            >
+              Delete
+            </button>
+          )}
+        </div>
       </div>
+      {showConfirm && (
+        <div className={styles.modalBackdrop} onClick={() => !deleting && setShowConfirm(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <p className={styles.modalText}>Are you sure you want to delete this image?</p>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.modalCancel} onClick={() => setShowConfirm(false)} disabled={deleting}>
+                Cancel
+              </button>
+              <button type="button" className={styles.modalDelete} onClick={handleConfirmDelete} disabled={deleting}>
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

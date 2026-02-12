@@ -15,17 +15,12 @@ export default function Layout() {
   }, [])
   const isLanding = location.pathname === '/' || location.pathname === '/feed'
   const headerTitleVisible = !isLanding || (scroll?.heroOutOfView ?? false)
-  const welcomeVisible = !isLanding || !(scroll?.heroOutOfView ?? false)
 
   return (
     <div className={styles.layout}>
       <Sidebar />
       <main className={styles.main}>
         <header className={styles.header}>
-          <div className={`${styles.welcome} ${welcomeVisible ? styles.welcomeVisible : ''}`}>
-            <p className={styles.welcomeLine}>Welcome to the Preply UX inspiration page.</p>
-            <p className={styles.welcomeLine}>Save. Share. Inspire.</p>
-          </div>
           <h1 className={`${styles.title} ${headerTitleVisible ? styles.titleVisible : ''}`}>
             save image as
           </h1>

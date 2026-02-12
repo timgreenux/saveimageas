@@ -18,8 +18,21 @@ function getInitials(name: string): string {
 
 export default function Sidebar() {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const [uploading, setUploading] = useState(false)
+  const [showSignOutToast, setShowSignOutToast] = useState(false)
+  const toastRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showSignOutToast) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (toastRef.current && !toastRef.current.contains(e.target as Node)) {
+        setShowSignOutToast(false)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [showSignOutToast])
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -74,7 +87,7 @@ export default function Sidebar() {
         </button>
       </nav>
       {user && (
-        <div className={styles.userSection}>
+        <div className={styles.userSection} ref={toastRef}>
           {uploading && (
             <div className={styles.spinner} aria-label="Uploading">
               <svg viewBox="0 0 36 36" className={styles.spinnerSvg}>
@@ -83,9 +96,23 @@ export default function Sidebar() {
               </svg>
             </div>
           )}
-          <div className={styles.userAvatar} title={user.name}>
+          <button
+            type="button"
+            className={styles.userAvatar}
+            title={user.name}
+            onClick={() => setShowSignOutToast((v) => !v)}
+            aria-expanded={showSignOutToast}
+            aria-haspopup="true"
+          >
             {getInitials(user.name)}
-          </div>
+          </button>
+          {showSignOutToast && (
+            <div className={styles.signOutToast}>
+              <button type="button" className={styles.signOutBtn} onClick={() => { signOut(); setShowSignOutToast(false); }}>
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       )}
     </aside>

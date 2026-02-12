@@ -7,6 +7,8 @@ export type ImageItem = {
   createdTime?: string
   uploadedBy?: string
   uploadedAt?: string
+  /** GitHub blob sha, needed for delete API */
+  sha?: string
 }
 
 export type HeartState = {

@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { fetchImagesFromGitHub, isGitHubConfigured } from '../lib/github-images'
 import type { ImageItem } from '../types/api'
 
 export function useImages() {
-  const { idToken } = useAuth()
   const [images, setImages] = useState<ImageItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -12,22 +11,19 @@ export function useImages() {
     setLoading(true)
     setError(null)
     try {
-      if (idToken) {
-        const res = await fetch('/api/images', {
-          headers: { Authorization: `Bearer ${idToken}` },
-        })
-        if (res.ok) {
-          const data = await res.json()
-          if (Array.isArray(data.images) && data.images.length > 0) {
-            setImages(data.images)
-            return
-          }
+      if (isGitHubConfigured()) {
+        const list = await fetchImagesFromGitHub()
+        if (list.length > 0) {
+          setImages(list)
+          return
         }
       }
       const fallback = await fetch('/images/manifest.json')
       if (fallback.ok) {
         const data = await fallback.json()
-        setImages(Array.isArray(data.images) ? data.images : [])
+        const list = Array.isArray(data.images) ? data.images : []
+        list.sort((a: ImageItem, b: ImageItem) => (b.uploadedAt || b.name).localeCompare(a.uploadedAt || a.name))
+        setImages(list)
       } else {
         setImages([])
       }
@@ -36,7 +32,9 @@ export function useImages() {
         const fallback = await fetch('/images/manifest.json')
         if (fallback.ok) {
           const data = await fallback.json()
-          setImages(Array.isArray(data.images) ? data.images : [])
+          const list = Array.isArray(data.images) ? data.images : []
+          list.sort((a: ImageItem, b: ImageItem) => (b.uploadedAt || b.name).localeCompare(a.uploadedAt || a.name))
+          setImages(list)
           return
         }
       } catch {
@@ -47,7 +45,7 @@ export function useImages() {
     } finally {
       setLoading(false)
     }
-  }, [idToken])
+  }, [])
 
   useEffect(() => {
     fetchImages()
@@ -57,5 +55,9 @@ export function useImages() {
     setImages((prev) => [image, ...prev])
   }, [])
 
-  return { images, loading, error, refetch: fetchImages, prependImage }
+  const removeImage = useCallback((id: string) => {
+    setImages((prev) => prev.filter((img) => img.id !== id))
+  }, [])
+
+  return { images, loading, error, refetch: fetchImages, prependImage, removeImage }
 }

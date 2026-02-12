@@ -132,4 +132,85 @@
   justify-content: center;
   flex-shrink: 0;
   user-select: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.userAvatar:hover {
+  filter: brightness(1.05);
+}
+
+.signOutToast {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 4px 0;
+  z-index: 200;
+}
+
+.signOutBtn {
+  display: block;
+  width: 100%;
+  padding: 10px 20px;
+  font-family: var(--font-platform);
+  font-size: 0.9rem;
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.signOutBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 72px;
+    flex-direction: row;
+    padding: 0 16px;
+    gap: 0;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sidebarHeader {
+    min-height: auto;
+  }
+
+  .nav {
+    flex-direction: row;
+    padding: 0;
+    margin: 0;
+    gap: 8px;
+  }
+
+  .userSection {
+    margin: 0;
+    margin-left: auto;
+    position: relative;
+  }
+
+  .signOutToast {
+    bottom: auto;
+    top: 100%;
+    left: auto;
+    right: 0;
+    transform: none;
+    margin-bottom: 0;
+    margin-top: 8px;
+  }
 }

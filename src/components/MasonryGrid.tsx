@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Masonry from 'react-masonry-css'
 import { useAuth } from '../contexts/AuthContext'
 import { useImages } from '../hooks/useImages'
+import { updateMetadataInGitHub, deleteImageFromGitHub } from '../lib/github-images'
 import ImageCard from './ImageCard'
 import styles from './MasonryGrid.module.css'
 
@@ -49,7 +50,6 @@ function fileToBase64Raw(file: File): Promise<string> {
   })
 }
 
-// GitHub config from env vars (baked into the bundle at build time)
 const GH_TOKEN = import.meta.env.VITE_GITHUB_TOKEN || ''
 const GH_REPO = import.meta.env.VITE_GITHUB_REPO || ''
 const GH_BRANCH = import.meta.env.VITE_GITHUB_BRANCH || 'main'
@@ -91,6 +91,12 @@ async function uploadToGitHub(
   }
 
   const now = new Date().toISOString().split('T')[0]
+  try {
+    await updateMetadataInGitHub(uniqueName, uploaderName, now)
+  } catch (e) {
+    console.warn('Upload succeeded but metadata update failed:', e)
+  }
+
   return {
     id: uniqueName,
     name: uniqueName,
@@ -102,8 +108,22 @@ async function uploadToGitHub(
 
 export default function MasonryGrid() {
   const { user } = useAuth()
-  const { images, loading, prependImage } = useImages()
+  const { images, loading, prependImage, removeImage } = useImages()
   const [uploading, setUploading] = useState(false)
+
+  const handleDelete = async (image: { id: string; name: string; sha?: string }): Promise<void> => {
+    if (!image.sha) {
+      alert('Cannot delete: missing file info. Refresh and try again.')
+      return
+    }
+    const filePath = `${GH_PATH}/${image.name}`
+    try {
+      await deleteImageFromGitHub(filePath, image.sha)
+      removeImage(image.id)
+    } catch (err) {
+      alert(`Delete failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
+  }
 
   useEffect(() => {
     const handler = async (e: Event) => {
@@ -136,14 +156,16 @@ export default function MasonryGrid() {
 
   return (
     <Masonry
-      breakpointCols={{ default: 3, 1200: 3, 900: 2, 600: 1 }}
+      breakpointCols={{ default: 3, 1200: 3, 900: 2, 768: 1 }}
       className={styles.masonry}
       columnClassName={styles.column}
     >
       {showPlaceholders ? (
         <Placeholders />
       ) : (
-        images.map((img) => <ImageCard key={img.id} image={img} />)
+        images.map((img) => (
+          <ImageCard key={img.id} image={img} onDelete={handleDelete} />
+        ))
       )}
     </Masonry>
   )
