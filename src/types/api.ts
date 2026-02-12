@@ -5,6 +5,8 @@ export type ImageItem = {
   thumbnail?: string
   mimeType?: string
   createdTime?: string
+  uploadedBy?: string
+  uploadedAt?: string
 }
 
 export type HeartState = {

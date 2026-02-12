@@ -89,3 +89,33 @@
   font-size: 3rem;
   color: var(--text);
 }
+
+.uploaderInfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 14px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.uploaderInfoVisible {
+  opacity: 1;
+}
+
+.uploaderName {
+  font-family: var(--font-platform);
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.uploaderDate {
+  font-family: var(--font-platform);
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--text);
+  margin-left: 2px;
+}

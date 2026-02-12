@@ -84,3 +84,21 @@
   object-fit: contain;
   filter: none;
 }
+
+.userAvatar {
+  margin-top: auto;
+  margin-bottom: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 122, 172, 0.2);
+  color: var(--pink);
+  font-family: var(--font-platform);
+  font-weight: 500;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}

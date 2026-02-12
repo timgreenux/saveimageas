@@ -3,6 +3,17 @@ import { useHearts } from '../hooks/useHearts'
 import type { ImageItem } from '../types/api'
 import styles from './ImageCard.module.css'
 
+function formatDate(dateStr: string): string {
+  try {
+    const d = new Date(dateStr)
+    const day = d.getDate()
+    const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th'
+    return `${day}${suffix} ${d.toLocaleString('en-GB', { month: 'long' })} ${d.getFullYear()}.`
+  } catch {
+    return dateStr
+  }
+}
+
 type Props = {
   image: ImageItem
 }
@@ -75,6 +86,12 @@ export default function ImageCard({ image }: Props) {
             )}
           </button>
         </div>
+        {(image.uploadedBy || image.uploadedAt) && (
+          <div className={`${styles.uploaderInfo} ${showOverlay ? styles.uploaderInfoVisible : ''}`}>
+            {image.uploadedBy && <span className={styles.uploaderName}>{image.uploadedBy}.</span>}
+            {image.uploadedAt && <span className={styles.uploaderDate}>{formatDate(image.uploadedAt)}</span>}
+          </div>
+        )}
       </div>
     </div>
   )

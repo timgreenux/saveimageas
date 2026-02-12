@@ -1,13 +1,24 @@
 import { NavLink } from 'react-router-dom'
 import { useRef } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import styles from './Sidebar.module.css'
 
 const iconPreply = '/Assets/PreplySymbol.svg'
 const iconInfo = '/Assets/Info.svg'
 const iconImageAdd = '/Assets/ImageAdd.svg'
 
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase())
+    .slice(0, 2)
+    .join('')
+}
+
 export default function Sidebar() {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { user } = useAuth()
 
   const handleUploadClick = () => {
     fileInputRef.current?.click()
@@ -52,6 +63,11 @@ export default function Sidebar() {
           <img src={iconImageAdd} alt="" width={24} height={24} />
         </button>
       </nav>
+      {user && (
+        <div className={styles.userAvatar} title={user.name}>
+          {getInitials(user.name)}
+        </div>
+      )}
     </aside>
   )
 }

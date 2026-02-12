@@ -26,6 +26,8 @@ const images = files.map((name) => ({
   id: name,
   name,
   url: `/images/${name}`,
+  uploadedBy: 'Tim Green',
+  uploadedAt: '2026-02-12',
 }))
 
 fs.writeFileSync(manifestPath, JSON.stringify({ images }, null, 2))
