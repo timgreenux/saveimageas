@@ -2,11 +2,36 @@
 
 const SAVEIMAGEAS_ORIGIN = 'https://saveimageas.vercel.app';
 const STORAGE_KEY = 'saveimageas-pending-upload';
+const FLUSH_DELAY_MS = 1200;
+
+function waitForTabLoad(tabId) {
+  return new Promise((resolve) => {
+    const listener = (id, changeInfo) => {
+      if (id === tabId && changeInfo.status === 'complete') {
+        chrome.tabs.onUpdated.removeListener(listener);
+        resolve();
+      }
+    };
+    chrome.tabs.onUpdated.addListener(listener);
+    chrome.tabs.get(tabId).then((t) => {
+      if (t.status === 'complete') {
+        chrome.tabs.onUpdated.removeListener(listener);
+        resolve();
+      }
+    }).catch(() => {});
+  });
+}
+
+function tellContentScriptToFlush(tabId) {
+  setTimeout(() => {
+    chrome.tabs.sendMessage(tabId, { type: 'SAVEIMAGEAS_FLUSH_PENDING' }).catch(() => {});
+  }, FLUSH_DELAY_MS);
+}
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: 'post-to-saveimageas',
-    title: 'Post to save image as',
+    title: 'Post to saveimageas',
     contexts: ['image'],
   });
 });
@@ -15,8 +40,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== 'post-to-saveimageas' || !info.srcUrl) return;
 
   try {
-    const res = await fetch(info.srcUrl, { mode: 'cors' });
-    if (!res.ok) throw new Error('Failed to fetch image');
+    const res = await fetch(info.srcUrl);
+    if (!res.ok) throw new Error(`Failed to fetch image: ${res.status}`);
     const blob = await res.blob();
     const dataUrl = await new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -34,13 +59,20 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
     const saveimageasUrl = SAVEIMAGEAS_ORIGIN + '/';
     const existing = await chrome.tabs.query({ url: SAVEIMAGEAS_ORIGIN + '/*' });
+    let targetTabId;
+
     if (existing.length > 0) {
-      await chrome.tabs.update(existing[0].id, { active: true });
-      await chrome.tabs.reload(existing[0].id);
+      targetTabId = existing[0].id;
+      await chrome.tabs.update(targetTabId, { active: true });
+      await chrome.tabs.reload(targetTabId);
     } else {
-      await chrome.tabs.create({ url: saveimageasUrl });
+      const newTab = await chrome.tabs.create({ url: saveimageasUrl });
+      targetTabId = newTab.id;
     }
+
+    await waitForTabLoad(targetTabId);
+    tellContentScriptToFlush(targetTabId);
   } catch (err) {
-    console.error('Post to save image as:', err);
+    console.error('Post to saveimageas:', err);
   }
 });

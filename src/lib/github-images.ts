@@ -23,6 +23,7 @@ export async function fetchImagesFromGitHub(): Promise<ImageItem[]> {
 
   const listUrl = `https://api.github.com/repos/${GH_REPO}/contents/${GH_PATH}?ref=${GH_BRANCH}`
   const res = await fetch(listUrl, {
+    cache: 'no-store',
     headers: { Accept: 'application/vnd.github.v3+json', Authorization: `Bearer ${GH_TOKEN}` },
   })
   if (!res.ok) return []
@@ -33,12 +34,12 @@ export async function fetchImagesFromGitHub(): Promise<ImageItem[]> {
   // Don't include metadata.json as an image
   const imageOnly = imageFiles.filter((f) => f.name !== 'metadata.json')
 
-  // Fetch metadata via API (works for private repos; raw URL would 404)
+  // Fetch metadata via API (works for private repos; raw URL would 404). No cache so refresh shows latest.
   let metadata: MetadataMap = {}
   try {
     const metaRes = await fetch(
-      `https://api.github.com/repos/${GH_REPO}/contents/${GH_PATH}/metadata.json?ref=${GH_BRANCH}`,
-      { headers: { Accept: 'application/vnd.github.v3+json', Authorization: `Bearer ${GH_TOKEN}` } }
+      `https://api.github.com/repos/${GH_REPO}/contents/${GH_PATH}/metadata.json?ref=${GH_BRANCH}&t=${Date.now()}`,
+      { cache: 'no-store', headers: { Accept: 'application/vnd.github.v3+json', Authorization: `Bearer ${GH_TOKEN}` } }
     )
     if (metaRes.ok) {
       const data = await metaRes.json()
@@ -76,21 +77,15 @@ export async function fetchImagesFromGitHub(): Promise<ImageItem[]> {
   return items
 }
 
-export async function updateMetadataInGitHub(
-  filename: string,
-  uploadedBy: string,
-  uploadedAt: string
-): Promise<void> {
-  if (!GH_TOKEN || !GH_REPO) return
-
+async function getMetadataBlob(): Promise<{ data: MetadataMap; sha: string | undefined }> {
   const metaPath = `${GH_PATH}/metadata.json`
-  const getUrl = `https://api.github.com/repos/${GH_REPO}/contents/${metaPath}?ref=${GH_BRANCH}`
-
-  let existing: MetadataMap = {}
-  let sha: string | undefined
+  const getUrl = `https://api.github.com/repos/${GH_REPO}/contents/${metaPath}?ref=${GH_BRANCH}&t=${Date.now()}`
   const getRes = await fetch(getUrl, {
+    cache: 'no-store',
     headers: { Accept: 'application/vnd.github.v3+json', Authorization: `Bearer ${GH_TOKEN}` },
   })
+  let existing: MetadataMap = {}
+  let sha: string | undefined
   if (getRes.ok) {
     const data = await getRes.json()
     sha = data.sha
@@ -102,28 +97,50 @@ export async function updateMetadataInGitHub(
       }
     }
   }
+  return { data: existing, sha }
+}
 
-  const updated = { ...existing, [filename]: { uploadedBy, uploadedAt } }
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))))
+export async function updateMetadataInGitHub(
+  filename: string,
+  uploadedBy: string,
+  uploadedAt: string
+): Promise<void> {
+  if (!GH_TOKEN || !GH_REPO) return
 
+  const metaPath = `${GH_PATH}/metadata.json`
   const putUrl = `https://api.github.com/repos/${GH_REPO}/contents/${metaPath}`
-  const putRes = await fetch(putUrl, {
-    method: 'PUT',
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `Bearer ${GH_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      message: `Update metadata for ${filename}`,
-      content,
-      branch: GH_BRANCH,
-      ...(sha ? { sha } : {}),
-    }),
-  })
-  if (!putRes.ok) {
-    const err = await putRes.text()
-    throw new Error(`Failed to update metadata: ${err}`)
+  const maxAttempts = 4
+  const backoffMs = [400, 800, 1600]
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const { data: existing, sha } = await getMetadataBlob()
+    const updated = { ...existing, [filename]: { uploadedBy, uploadedAt } }
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))))
+
+    const putRes = await fetch(putUrl, {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `Bearer ${GH_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: `Update metadata for ${filename}`,
+        content,
+        branch: GH_BRANCH,
+        ...(sha ? { sha } : {}),
+      }),
+    })
+
+    if (putRes.ok) return
+
+    const errText = await putRes.text()
+    const isConflict = putRes.status === 422 || putRes.status === 409
+    if (isConflict && attempt < maxAttempts - 1) {
+      await new Promise((r) => setTimeout(r, backoffMs[attempt] ?? 2000))
+      continue
+    }
+    throw new Error(`Failed to update metadata: ${errText}`)
   }
 }
 

@@ -108,6 +108,12 @@ async function uploadToGitHub(
     await updateMetadataInGitHub(uniqueName, uploaderName, now)
   } catch (e) {
     console.warn('Upload succeeded but metadata update failed:', e)
+    await new Promise((r) => setTimeout(r, 1500))
+    try {
+      await updateMetadataInGitHub(uniqueName, uploaderName, now)
+    } catch (e2) {
+      console.warn('Metadata retry also failed:', e2)
+    }
   }
 
   return {
@@ -178,7 +184,7 @@ export default function MasonryGrid() {
     return () => window.removeEventListener('saveimageas-upload', handler)
   }, [])
 
-  // Chrome extension: "Post to save image as" sends image via postMessage
+  // Chrome extension: "Post to saveimageas" – app requests pending upload when ready so we don't miss the message
   useEffect(() => {
     const handler = (e: MessageEvent) => {
       if (e.data?.type !== 'SAVEIMAGEAS_EXTENSION_UPLOAD' || !e.data?.payload) return
@@ -192,7 +198,19 @@ export default function MasonryGrid() {
       }
     }
     window.addEventListener('message', handler)
-    return () => window.removeEventListener('message', handler)
+    const requestPending = () => window.postMessage({ type: 'SAVEIMAGEAS_GET_PENDING' }, '*')
+    requestPending()
+    const t1 = window.setTimeout(requestPending, 150)
+    const t2 = window.setTimeout(requestPending, 400)
+    const t3 = window.setTimeout(requestPending, 800)
+    const t4 = window.setTimeout(requestPending, 1500)
+    return () => {
+      window.removeEventListener('message', handler)
+      clearTimeout(t1)
+      clearTimeout(t2)
+      clearTimeout(t3)
+      clearTimeout(t4)
+    }
   }, [])
 
   // Dispatch uploading state so the sidebar can show a spinner
