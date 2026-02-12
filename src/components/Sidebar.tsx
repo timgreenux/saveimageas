@@ -57,6 +57,7 @@ export default function Sidebar() {
           <img src={iconPreply} alt="" className={styles.logo} width={64} height={64} />
         </NavLink>
       </div>
+      <div className={styles.sidebarSpacer} aria-hidden />
       <nav className={styles.nav} aria-label="Main">
         <NavLink
           to="/info"
