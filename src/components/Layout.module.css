@@ -43,6 +43,14 @@
   transition: opacity 1.2s ease, visibility 1.2s ease;
 }
 
+.welcomeLine {
+  margin: 0 0 0.5em;
+}
+
+.welcomeLine:last-child {
+  margin-bottom: 0;
+}
+
 .welcomeVisible {
   opacity: 1;
   visibility: visible;
@@ -53,7 +61,7 @@
   right: 24px;
   font-family: var(--font-platform);
   font-weight: 500;
-  font-size: 1.5rem;
+  font-size: 2.25rem;
   letter-spacing: -0.02em;
   margin: 0;
   color: var(--text);

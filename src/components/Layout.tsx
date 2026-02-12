@@ -22,9 +22,10 @@ export default function Layout() {
       <Sidebar />
       <main className={styles.main}>
         <header className={styles.header}>
-          <p className={`${styles.welcome} ${welcomeVisible ? styles.welcomeVisible : ''}`}>
-            Welcome to the Preply UX inspiration page. Save. Share. Inspire.
-          </p>
+          <div className={`${styles.welcome} ${welcomeVisible ? styles.welcomeVisible : ''}`}>
+            <p className={styles.welcomeLine}>Welcome to the Preply UX inspiration page.</p>
+            <p className={styles.welcomeLine}>Save. Share. Inspire.</p>
+          </div>
           <h1 className={`${styles.title} ${headerTitleVisible ? styles.titleVisible : ''}`}>
             save image as
           </h1>
