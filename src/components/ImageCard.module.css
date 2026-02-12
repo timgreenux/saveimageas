@@ -37,6 +37,36 @@
   opacity: 1;
 }
 
+.overlayTopRight {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.overlayTopRightVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.downloadLink {
+  font-family: var(--font-platform);
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--text);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.downloadLink:hover {
+  color: var(--pink);
+}
+
 .heartWrap {
   position: absolute;
   inset: 0;

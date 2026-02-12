@@ -70,6 +70,26 @@ export default function ImageCard({ image, onDelete }: Props) {
     }
   }
 
+  const handleDownloadClick = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      try {
+        const res = await fetch(image.url, { mode: 'cors' })
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = image.name || 'image'
+        a.click()
+        URL.revokeObjectURL(url)
+      } catch {
+        window.open(image.url, '_blank', 'noopener')
+      }
+    },
+    [image.url, image.name]
+  )
+
   return (
     <div
       className={styles.card}
@@ -85,6 +105,16 @@ export default function ImageCard({ image, onDelete }: Props) {
           decoding="async"
         />
         <div className={`${styles.overlay} ${showOverlay ? styles.overlayVisible : ''}`} />
+        <div className={`${styles.overlayTopRight} ${showOverlay ? styles.overlayTopRightVisible : ''}`}>
+          <button
+            type="button"
+            className={styles.downloadLink}
+            onClick={handleDownloadClick}
+            aria-label="Download image"
+          >
+            Download
+          </button>
+        </div>
         <div className={`${styles.heartWrap} ${showOverlay ? styles.heartWrapVisible : ''}`}>
           <button
             type="button"
