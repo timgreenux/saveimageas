@@ -45,7 +45,7 @@
 .nav .navItemUpload {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 176px; /* 64px below the info button (info at 64px + 48px + 64px gap) */
   transform: translate(-50%, -50%);
 }
 
@@ -266,11 +266,7 @@
 
   .nav .navItem,
   .nav .navItemActive {
-    position: absolute;
-    left: 25%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: auto;
+    display: none; /* Info button hidden on mobile */
   }
 
   .nav .navItemUpload {
