@@ -7,24 +7,22 @@ const CATEGORIES = [
   'product',
   'graphic',
   'art',
-  'anything*',
+  'anything *',
 ]
 
 export default function Info() {
   return (
     <div className={styles.page}>
-      <div className={styles.content}>
-        <ul className={styles.categoryList}>
-          {CATEGORIES.map((label) => (
-            <li key={label} className={styles.categoryItem}>
-              {label}
-            </li>
-          ))}
-        </ul>
-        <p className={styles.tagline}>
-          <span className={styles.asterisk} aria-hidden>*</span> Keep it SFW.
-        </p>
-      </div>
+      <ul className={styles.categoryList}>
+        {CATEGORIES.map((label) => (
+          <li key={label} className={styles.categoryItem}>
+            {label}
+          </li>
+        ))}
+      </ul>
+      <p className={styles.tagline}>
+        * Keep it SFW.
+      </p>
     </div>
   )
 }
