@@ -1,7 +1,10 @@
-import { OAuth2Client } from 'google-auth-library'
+/**
+ * Lightweight Google ID token verification.
+ * Uses Google's tokeninfo endpoint instead of the heavy google-auth-library
+ * package which crashes Vercel serverless functions.
+ */
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
-const client = new OAuth2Client(GOOGLE_CLIENT_ID)
 
 export type TokenPayload = {
   sub: string
@@ -13,14 +16,26 @@ export type TokenPayload = {
 export async function verifyIdToken(idToken: string): Promise<TokenPayload | null> {
   if (!GOOGLE_CLIENT_ID) return null
   try {
-    const ticket = await client.verifyIdToken({ idToken, audience: GOOGLE_CLIENT_ID })
-    const payload = ticket.getPayload()
-    if (!payload?.email) return null
+    const res = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`
+    )
+    if (!res.ok) return null
+    const data = await res.json()
+
+    // Verify audience matches our client ID
+    if (data.aud !== GOOGLE_CLIENT_ID) return null
+
+    // Check token is not expired
+    const exp = parseInt(data.exp, 10)
+    if (exp && exp < Math.floor(Date.now() / 1000)) return null
+
+    if (!data.email) return null
+
     return {
-      sub: payload.sub,
-      email: payload.email,
-      name: payload.name,
-      picture: payload.picture,
+      sub: data.sub,
+      email: data.email,
+      name: data.name || undefined,
+      picture: data.picture || undefined,
     }
   } catch {
     return null
