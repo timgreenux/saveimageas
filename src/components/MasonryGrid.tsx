@@ -73,9 +73,13 @@ export default function MasonryGrid() {
         })
 
         if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: 'Unknown error' }))
-          console.error('Upload failed:', err)
-          alert(`Upload failed: ${err.error || res.statusText}`)
+          let errMsg = `HTTP ${res.status} ${res.statusText}`
+          try {
+            const errBody = await res.json()
+            errMsg = errBody.error || JSON.stringify(errBody)
+          } catch { /* couldn't parse */ }
+          console.error('Upload failed:', errMsg)
+          alert(`Upload failed: ${errMsg}`)
           return
         }
 
