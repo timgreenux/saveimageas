@@ -3,14 +3,6 @@ import { getBearerToken, verifyIdToken } from './lib/auth'
 import { isAllowed } from './lib/access'
 import { uploadImageToGitHub } from './lib/github-images'
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '20mb',
-    },
-  },
-}
-
 const USE_GITHUB = !!process.env.GITHUB_REPO
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
