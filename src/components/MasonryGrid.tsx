@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Masonry from 'react-masonry-css'
 import { useAuth } from '../contexts/AuthContext'
 import { useImages } from '../hooks/useImages'
@@ -48,6 +48,16 @@ function fileToBase64Raw(file: File): Promise<string> {
     reader.onerror = () => reject(new Error('Failed to read file'))
     reader.readAsDataURL(file)
   })
+}
+
+function dataURLtoFile(dataUrl: string, filename: string): File {
+  const arr = dataUrl.split(',')
+  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png'
+  const bstr = atob(arr[1] ?? '')
+  let n = bstr.length
+  const u8 = new Uint8Array(n)
+  while (n--) u8[n] = bstr.charCodeAt(n)
+  return new File([u8], filename, { type: mime })
 }
 
 const GH_TOKEN = import.meta.env.VITE_GITHUB_TOKEN || ''
@@ -114,6 +124,8 @@ export default function MasonryGrid() {
   const { user } = useAuth()
   const { images, loading, prependImage, removeImage } = useImages()
   const [uploading, setUploading] = useState(false)
+  const queueRef = useRef<File[]>([])
+  const processingRef = useRef(false)
 
   const handleDelete = async (image: { id: string; name: string; sha?: string }): Promise<void> => {
     if (!image.sha) {
@@ -129,27 +141,59 @@ export default function MasonryGrid() {
     }
   }
 
-  useEffect(() => {
-    const handler = async (e: Event) => {
-      const ev = e as CustomEvent<{ file: File }>
-      const file = ev.detail?.file
-      if (!file || !file.type.startsWith('image/')) return
+  const processQueueRef = useRef<() => void>(() => {})
 
+  useEffect(() => {
+    processQueueRef.current = async () => {
+      if (processingRef.current || queueRef.current.length === 0) return
+      const file = queueRef.current.shift()
+      if (!file) return
+      processingRef.current = true
       setUploading(true)
+      const uploaderName = user?.name ?? user?.email ?? 'Anonymous'
       try {
-        const uploaderName = user?.name || user?.email || 'Anonymous'
         const image = await uploadToGitHub(file, uploaderName)
         if (image) prependImage(image)
       } catch (err) {
         console.error('Upload error:', err)
         alert(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
       } finally {
-        setUploading(false)
+        processingRef.current = false
+        setUploading(queueRef.current.length > 0)
+        if (queueRef.current.length > 0) processQueueRef.current()
       }
+    }
+  }, [user, prependImage])
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ev = e as CustomEvent<{ file: File }>
+      const file = ev.detail?.file
+      if (!file || !file.type.startsWith('image/')) return
+      queueRef.current.push(file)
+      setUploading(true)
+      processQueueRef.current()
     }
     window.addEventListener('saveimageas-upload', handler)
     return () => window.removeEventListener('saveimageas-upload', handler)
-  }, [user, prependImage])
+  }, [])
+
+  // Chrome extension: "Post to save image as" sends image via postMessage
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type !== 'SAVEIMAGEAS_EXTENSION_UPLOAD' || !e.data?.payload) return
+      const { dataUrl, filename } = e.data.payload
+      if (!dataUrl || typeof filename !== 'string') return
+      try {
+        const file = dataURLtoFile(dataUrl, filename)
+        window.dispatchEvent(new CustomEvent('saveimageas-upload', { detail: { file } }))
+      } catch (err) {
+        console.error('Extension upload:', err)
+      }
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [])
 
   // Dispatch uploading state so the sidebar can show a spinner
   useEffect(() => {
