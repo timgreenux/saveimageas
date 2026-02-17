@@ -67,8 +67,9 @@ const GH_PATH = import.meta.env.VITE_GITHUB_IMAGES_PATH || 'images'
 
 async function uploadToGitHub(
   file: File,
-  uploaderName: string
-): Promise<{ id: string; name: string; url: string; uploadedBy: string; uploadedAt: string; sha?: string } | null> {
+  uploaderName: string,
+  description?: string
+): Promise<{ id: string; name: string; url: string; uploadedBy: string; uploadedAt: string; description?: string; sha?: string } | null> {
   if (!GH_TOKEN || !GH_REPO) {
     throw new Error('GitHub upload not configured. Set VITE_GITHUB_TOKEN and VITE_GITHUB_REPO in Vercel env vars.')
   }
@@ -104,13 +105,14 @@ async function uploadToGitHub(
   const sha = resData.content?.sha ?? resData.sha ?? undefined
 
   const now = new Date().toISOString().split('T')[0]
+  const desc = description?.trim().slice(0, 256) || undefined
   try {
-    await updateMetadataInGitHub(uniqueName, uploaderName, now)
+    await updateMetadataInGitHub(uniqueName, uploaderName, now, desc)
   } catch (e) {
     console.warn('Upload succeeded but metadata update failed:', e)
     await new Promise((r) => setTimeout(r, 1500))
     try {
-      await updateMetadataInGitHub(uniqueName, uploaderName, now)
+      await updateMetadataInGitHub(uniqueName, uploaderName, now, desc)
     } catch (e2) {
       console.warn('Metadata retry also failed:', e2)
     }
@@ -122,6 +124,7 @@ async function uploadToGitHub(
     url: `https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${filePath}`,
     uploadedBy: uploaderName,
     uploadedAt: now,
+    ...(desc ? { description: desc } : {}),
     sha,
   }
 }
@@ -130,7 +133,8 @@ export default function MasonryGrid() {
   const { user } = useAuth()
   const { images, loading, prependImage, removeImage } = useImages()
   const [uploading, setUploading] = useState(false)
-  const queueRef = useRef<File[]>([])
+  type QueueItem = { file: File; description?: string }
+  const queueRef = useRef<QueueItem[]>([])
   const processingRef = useRef(false)
 
   const handleDelete = async (image: { id: string; name: string; sha?: string }): Promise<void> => {
@@ -152,13 +156,13 @@ export default function MasonryGrid() {
   useEffect(() => {
     processQueueRef.current = async () => {
       if (processingRef.current || queueRef.current.length === 0) return
-      const file = queueRef.current.shift()
-      if (!file) return
+      const item = queueRef.current.shift()
+      if (!item) return
       processingRef.current = true
       setUploading(true)
       const uploaderName = user?.name ?? user?.email ?? 'Anonymous'
       try {
-        const image = await uploadToGitHub(file, uploaderName)
+        const image = await uploadToGitHub(item.file, uploaderName, item.description)
         if (image) prependImage(image)
       } catch (err) {
         console.error('Upload error:', err)
@@ -173,10 +177,10 @@ export default function MasonryGrid() {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const ev = e as CustomEvent<{ file: File }>
+      const ev = e as CustomEvent<{ file: File; description?: string }>
       const file = ev.detail?.file
       if (!file || !file.type.startsWith('image/')) return
-      queueRef.current.push(file)
+      queueRef.current.push({ file, description: ev.detail?.description })
       setUploading(true)
       processQueueRef.current()
     }
@@ -192,7 +196,7 @@ export default function MasonryGrid() {
       if (!dataUrl || typeof filename !== 'string') return
       try {
         const file = dataURLtoFile(dataUrl, filename)
-        window.dispatchEvent(new CustomEvent('saveimageas-upload', { detail: { file } }))
+        window.dispatchEvent(new CustomEvent('saveimageas-upload', { detail: { file } })) // no description from extension
       } catch (err) {
         console.error('Extension upload:', err)
       }

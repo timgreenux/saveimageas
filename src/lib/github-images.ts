@@ -16,7 +16,7 @@ export function isGitHubConfigured(): boolean {
   return !!(GH_TOKEN && GH_REPO)
 }
 
-export type MetadataMap = Record<string, { uploadedBy?: string; uploadedAt?: string }>
+export type MetadataMap = Record<string, { uploadedBy?: string; uploadedAt?: string; description?: string }>
 
 export async function fetchImagesFromGitHub(): Promise<ImageItem[]> {
   if (!GH_TOKEN || !GH_REPO) return []
@@ -61,6 +61,7 @@ export async function fetchImagesFromGitHub(): Promise<ImageItem[]> {
       sha: f.sha,
       uploadedBy: meta.uploadedBy,
       uploadedAt: meta.uploadedAt,
+      description: meta.description,
     }
   })
 
@@ -109,7 +110,8 @@ async function getMetadataBlob(): Promise<{ data: MetadataMap; sha: string | und
 export async function updateMetadataInGitHub(
   filename: string,
   uploadedBy: string,
-  uploadedAt: string
+  uploadedAt: string,
+  description?: string
 ): Promise<void> {
   if (!GH_TOKEN || !GH_REPO) return
 
@@ -120,7 +122,8 @@ export async function updateMetadataInGitHub(
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const { data: existing, sha } = await getMetadataBlob()
-    const updated = { ...existing, [filename]: { uploadedBy, uploadedAt } }
+    const entry = { uploadedBy, uploadedAt, ...(description != null && description !== '' ? { description } : {}) }
+    const updated = { ...existing, [filename]: entry }
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))))
 
     const putRes = await fetch(putUrl, {

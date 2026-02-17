@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
-import { useRef, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import UploadImageDialog from './UploadImageDialog'
 import styles from './Sidebar.module.css'
 
 const iconPreply = '/Assets/PreplySymbol.svg'
@@ -17,10 +18,10 @@ function getInitials(name: string): string {
 }
 
 export default function Sidebar() {
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const { user, signOut } = useAuth()
   const [uploading, setUploading] = useState(false)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
+  const [showUploadDialog, setShowUploadDialog] = useState(false)
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -32,26 +33,21 @@ export default function Sidebar() {
   }, [])
 
   const handleUploadClick = () => {
-    fileInputRef.current?.click()
+    setShowUploadDialog(true)
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const event = new CustomEvent('saveimageas-upload', { detail: { file } })
-    window.dispatchEvent(event)
-    e.target.value = ''
+  const handleUploadSave = (file: File, description: string) => {
+    window.dispatchEvent(new CustomEvent('saveimageas-upload', { detail: { file, description } }))
   }
 
   return (
     <aside className={styles.sidebar}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        aria-hidden
-      />
+      {showUploadDialog && (
+        <UploadImageDialog
+          onClose={() => setShowUploadDialog(false)}
+          onSave={handleUploadSave}
+        />
+      )}
       <div className={styles.sidebarHeader}>
         <NavLink to="/" className={styles.logoLink} aria-label="Home">
           <img src={iconPreply} alt="" className={styles.logo} width={64} height={64} />

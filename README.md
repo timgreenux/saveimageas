@@ -19,7 +19,7 @@ A React web app for saving and displaying images in a masonry feed. Images live 
 
 1. [Google Cloud Console](https://console.cloud.google.com/) → your project → **APIs & Services** → **Credentials**.
 2. **Create credentials** → **OAuth client ID** → **Web application**.
-3. Add **Authorized JavaScript origins**: `http://localhost:5173`, `https://your-app.vercel.app`.
+3. Add **Authorized JavaScript origins**: `http://localhost:5173` (dev), and your production URL (e.g. `https://saveimageas.vercel.app`). If you use another port (e.g. `npm run preview` → 4173), add `http://localhost:4173` too. **If you get "Error 400: origin_mismatch" on localhost, the exact origin (including port) must be listed here.**
 4. Copy the **Client ID** → set as `VITE_GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_ID` in your env.
 
 ### 2. Who can sign in (pick one – no Admin API needed)

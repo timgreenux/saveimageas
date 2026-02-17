@@ -115,6 +115,11 @@ export default function ImageCard({ image, onDelete }: Props) {
           decoding="async"
         />
         <div className={`${styles.overlay} ${showOverlay ? styles.overlayVisible : ''}`} />
+        <div className={`${styles.overlayTopLeft} ${showOverlay ? styles.overlayTopLeftVisible : ''}`}>
+          {image.description && (
+            <p className={styles.descriptionText}>{image.description}</p>
+          )}
+        </div>
         <div className={`${styles.overlayTopRight} ${showOverlay ? styles.overlayTopRightVisible : ''}`}>
           <button
             type="button"

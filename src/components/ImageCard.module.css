@@ -37,6 +37,32 @@
   opacity: 1;
 }
 
+.overlayTopLeft {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 2;
+  max-width: 75%;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.overlayTopLeftVisible {
+  opacity: 1;
+}
+
+.descriptionText {
+  font-family: var(--font-platform);
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.35;
+  text-align: left;
+  word-wrap: break-word;
+}
+
 .overlayTopRight {
   position: absolute;
   top: 12px;

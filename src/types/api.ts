@@ -7,6 +7,8 @@ export type ImageItem = {
   createdTime?: string
   uploadedBy?: string
   uploadedAt?: string
+  /** Optional description; shown on hover overlay top-left */
+  description?: string
   /** GitHub blob sha, needed for delete API */
   sha?: string
 }
