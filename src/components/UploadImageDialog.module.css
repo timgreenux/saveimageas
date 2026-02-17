@@ -87,7 +87,6 @@
 }
 
 .browseIcon {
-  color: #999;
   flex-shrink: 0;
 }
 
@@ -95,8 +94,8 @@
   font-family: var(--font-platform);
   font-size: 0.9rem;
   padding: 8px 16px;
-  border: 1px solid var(--text);
-  border-radius: 6px;
+  border: 2px solid #121117;
+  border-radius: 4px;
   background: #fff;
   color: var(--text);
   cursor: pointer;
@@ -145,8 +144,8 @@
   font-family: var(--font-platform);
   font-size: 0.9rem;
   padding: 8px 16px;
-  border: 1px solid var(--text);
-  border-radius: 6px;
+  border: 2px solid #121117;
+  border-radius: 4px;
   background: #fff;
   color: var(--text);
   cursor: pointer;
@@ -160,8 +159,8 @@
   font-family: var(--font-platform);
   font-size: 0.9rem;
   padding: 8px 16px;
-  border: 1px solid var(--text);
-  border-radius: 6px;
+  border: 2px solid #121117;
+  border-radius: 4px;
   background: var(--pink);
   color: var(--text);
   cursor: pointer;
